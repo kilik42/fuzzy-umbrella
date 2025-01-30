@@ -4,7 +4,7 @@
 #### 1. **Install Dependencies** (Run in Terminal)
 
 # pip install pyttsx3 SpeechRecognition wikipedia requests datetime smtplib
-
+#pip install pyaudio
 
 
 
@@ -15,6 +15,7 @@
 import pyttsx3
 import speech_recognition as sr
 import datetime
+import pyaudio 
 import wikipedia
 import webbrowser
 import smtplib
