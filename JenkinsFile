@@ -17,6 +17,8 @@ pipeline {
                 }
             }
         }
+
+        
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/kilik42/fuzzy-umbrella' 
