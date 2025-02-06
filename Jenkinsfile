@@ -18,6 +18,24 @@ pipeline {
                 }
             }
         }
+        stage('Install or Update AWS CLI') {
+        steps {
+            script {
+                sh '''
+                if command -v aws &> /dev/null; then
+                    echo "AWS CLI is already installed. Updating..."
+                    ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin --update
+                else
+                    echo "AWS CLI not found. Installing..."
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip -o awscliv2.zip
+                    ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
+                fi
+                export PATH=/var/jenkins_home/.local/bin:$PATH
+                '''
+            }
+        }
+    }
 
         stage('Install AWS CLI') {
             steps {
@@ -36,6 +54,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Set AWS Credentials') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
