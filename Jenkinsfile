@@ -14,7 +14,7 @@ pipeline {
                     echo "Setting up environment variables..."
                     export PATH=$AWS_CLI_PATH:$PATH
                     echo 'export PATH=$AWS_CLI_PATH:$PATH' >> ~/.bashrc
-                    source ~/.bashrc
+                    . ~/.bashrc  # Fix: Use . instead of source
                     '''
                 }
             }
