@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        AWS_CLI_PATH = "$HOME/.local/bin"
+        AWS_CLI_PATH = "/var/jenkins_home/.local/bin"
     }
 
     stages {
@@ -11,10 +11,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    echo "Setting up environment variables..."
+                    echo "🔧 Setting up environment variables..."
                     export PATH=$AWS_CLI_PATH:$PATH
                     echo 'export PATH=$AWS_CLI_PATH:$PATH' >> ~/.bashrc
-                    . ~/.bashrc  # Fix: Use . instead of source
+                    echo 'export PATH=$AWS_CLI_PATH:$PATH' >> ~/.profile
                     '''
                 }
             }
@@ -24,13 +24,21 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    echo "🔍 Checking if AWS CLI is installed..."
                     if ! command -v aws &> /dev/null
                     then
-                        echo "AWS CLI not found. Installing in user space..."
+                        echo "⚙️ AWS CLI not found. Installing..."
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        unzip -o awscliv2.zip  # ✅ Fix: Force overwrite without prompt
-                        ./aws/install -i $HOME/.local/aws-cli -b $HOME/.local/bin
+                        unzip -o awscliv2.zip
+                        ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
+                        echo "✅ AWS CLI Installed Successfully!"
+                    else
+                        echo "✅ AWS CLI already installed."
                     fi
+
+                    echo "🔄 Verifying AWS Installation..."
+                    ls -l /var/jenkins_home/.local/bin/aws
+                    which aws
                     aws --version
                     '''
                 }
@@ -41,7 +49,8 @@ pipeline {
             steps {
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
-                    echo "Checking AWS Credentials..."
+                    echo "🔑 Configuring AWS Credentials..."
+                    export PATH=$AWS_CLI_PATH:$PATH
                     aws sts get-caller-identity
                     '''
                 }
@@ -57,7 +66,7 @@ pipeline {
         stage('Initialize Terraform') {
             steps {
                 sh '''
-                echo "Initializing Terraform..."
+                echo "🚀 Initializing Terraform..."
                 terraform init
                 '''
             }
@@ -66,7 +75,7 @@ pipeline {
         stage('Plan Terraform') {
             steps {
                 sh '''
-                echo "Running Terraform Plan..."
+                echo "📋 Running Terraform Plan..."
                 terraform plan
                 '''
             }
@@ -75,7 +84,7 @@ pipeline {
         stage('Apply Terraform') {
             steps {
                 sh '''
-                echo "Applying Terraform Configuration..."
+                echo "⚡ Applying Terraform Configuration..."
                 terraform apply -auto-approve
                 '''
             }
@@ -84,10 +93,10 @@ pipeline {
 
     post {
         always {
-            echo "Terraform deployment finished!"
+            echo "✅ Terraform deployment finished!"
         }
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "🎉 Pipeline completed successfully!"
         }
         failure {
             echo "❌ Pipeline failed!"
