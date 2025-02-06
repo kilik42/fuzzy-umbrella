@@ -28,7 +28,7 @@ pipeline {
                     then
                         echo "AWS CLI not found. Installing in user space..."
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        unzip awscliv2.zip
+                        unzip -o awscliv2.zip  # ✅ Fix: Force overwrite without prompt
                         ./aws/install -i $HOME/.local/aws-cli -b $HOME/.local/bin
                     fi
                     aws --version
