@@ -20,22 +20,22 @@ pipeline {
         }
 
         stage('Install AWS CLI') {
-    steps {
-        script {
-            sh '''
-            if ! command -v aws &> /dev/null; then
-                echo "AWS CLI not found. Installing..."
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip awscliv2.zip
-                ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
-                export PATH=/var/jenkins_home/.local/bin:$PATH
-            else
-                echo "AWS CLI is already installed."
-            fi
-            '''
+            steps {
+                script {
+                    sh '''
+                    if ! command -v aws &> /dev/null; then
+                        echo "AWS CLI not found. Installing..."
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip -o awscliv2.zip   # The '-o' flag ensures it overwrites without prompt
+                        ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
+                        export PATH=/var/jenkins_home/.local/bin:$PATH
+                    else
+                        echo "AWS CLI is already installed."
+                    fi
+                    '''
+                }
+            }
         }
-    }
-}
         stage('Set AWS Credentials') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AWS_CREDENTIALS_ID]]) {
