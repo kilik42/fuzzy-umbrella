@@ -20,7 +20,7 @@ pipeline {
             }
         }
 
-        stage('Install AWS CLI') {
+        stage('Install/Update AWS CLI') {
             steps {
                 script {
                     sh '''
@@ -33,7 +33,9 @@ pipeline {
                         ./aws/install -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
                         echo "✅ AWS CLI Installed Successfully!"
                     else
-                        echo "✅ AWS CLI already installed."
+                        echo "🔄 AWS CLI already installed. Updating..."
+                        ./aws/install --update -i /var/jenkins_home/.local/aws-cli -b /var/jenkins_home/.local/bin
+                        echo "✅ AWS CLI Updated Successfully!"
                     fi
 
                     echo "🔄 Verifying AWS Installation..."
