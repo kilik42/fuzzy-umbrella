@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/kilik42/fuzzy-umbrella'
+                git 'https://github.com/kilik42/fuzzy-umbrella.git'
             }
         }
 
