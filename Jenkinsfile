@@ -1,61 +1,96 @@
 pipeline {
     agent any
+
     environment {
-        AWS_REGION = 'us-east-1' 
+        AWS_REGION = 'us-east-1'
+        AWS_CLI_PATH = "$HOME/.local/bin"
     }
+
     stages {
-        stage('Install AWS CLI') {
+        stage('Setup Environment') {
             steps {
-                sh '''
-                if ! command -v aws &> /dev/null
-                then
-                    echo "AWS CLI not found. Installing..."
-                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                    unzip awscliv2.zip
-                    ./aws/install
-                fi
-                aws --version
-                '''
-            }
-        }
-        stage('Set AWS Credentials') {
-            steps {
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh 'aws sts get-caller-identity'
+                script {
+                    sh '''
+                    echo "Setting up environment variables..."
+                    export PATH=$AWS_CLI_PATH:$PATH
+                    echo 'export PATH=$AWS_CLI_PATH:$PATH' >> ~/.bashrc
+                    source ~/.bashrc
+                    '''
                 }
             }
         }
+
+        stage('Install AWS CLI') {
+            steps {
+                script {
+                    sh '''
+                    if ! command -v aws &> /dev/null
+                    then
+                        echo "AWS CLI not found. Installing in user space..."
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        ./aws/install -i $HOME/.local/aws-cli -b $HOME/.local/bin
+                    fi
+                    aws --version
+                    '''
+                }
+            }
+        }
+
+        stage('Set AWS Credentials') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                    echo "Checking AWS Credentials..."
+                    aws sts get-caller-identity
+                    '''
+                }
+            }
+        }
+
         stage('Checkout Code') {
             steps {
                 git url: 'https://github.com/kilik42/fuzzy-umbrella', branch: 'main'
             }
         }
+
         stage('Initialize Terraform') {
             steps {
-                sh 'terraform init'
+                sh '''
+                echo "Initializing Terraform..."
+                terraform init
+                '''
             }
         }
+
         stage('Plan Terraform') {
             steps {
-                sh 'terraform plan'
+                sh '''
+                echo "Running Terraform Plan..."
+                terraform plan
+                '''
             }
         }
+
         stage('Apply Terraform') {
             steps {
-                sh 'terraform apply -auto-approve'
+                sh '''
+                echo "Applying Terraform Configuration..."
+                terraform apply -auto-approve
+                '''
             }
         }
-    } // Closing `stages`
+    }
 
     post {
         always {
             echo "Terraform deployment finished!"
         }
         success {
-            echo "Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully!"
         }
         failure {
-            echo "Pipeline failed!"
+            echo "❌ Pipeline failed!"
         }
     }
-} // Closing `pipeline`
+}
