@@ -78,10 +78,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo " Pipeline completed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed! Check logs for details."
+            echo "Pipeline failed! Check logs for details."
         }
     }
 }
