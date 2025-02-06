@@ -18,71 +18,44 @@ pipeline {
                 '''
             }
         }
-    stages {
         stage('Set AWS Credentials') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'jenkins02' 
-                ]]) {
-                    sh '''
-                    echo "AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
-                    aws sts get-caller-identity
-                    '''
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh 'aws sts get-caller-identity'
                 }
             }
         }
-
-        
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/kilik42/fuzzy-umbrella' 
+                git url: 'https://github.com/kilik42/fuzzy-umbrella', branch: 'main'
             }
         }
         stage('Initialize Terraform') {
             steps {
-                sh '''
-                terraform init
-                '''
+                sh 'terraform init'
             }
         }
         stage('Plan Terraform') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'jenkins02'
-                ]]) {
-                    sh '''
-                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                    terraform plan -out=tfplan
-                    '''
-                }
+                sh 'terraform plan'
             }
         }
         stage('Apply Terraform') {
             steps {
-                input message: "Approve Terraform Apply?", ok: "Deploy"
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'jenkins02'
-                ]]) {
-                    sh '''
-                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                    terraform apply -auto-approve tfplan
-                    '''
-                }
+                sh 'terraform apply -auto-approve'
             }
         }
-    }
+    } // Closing `stages`
+
     post {
+        always {
+            echo "Terraform deployment finished!"
+        }
         success {
-            echo 'Terraform deployment completed successfully!'
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo 'Terraform deployment failed!'
+            echo "Pipeline failed!"
         }
     }
-}
-}
+} // Closing `pipeline`
