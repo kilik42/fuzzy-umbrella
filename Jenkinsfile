@@ -4,6 +4,21 @@ pipeline {
         AWS_REGION = 'us-east-1' 
     }
     stages {
+        stage('Install AWS CLI') {
+            steps {
+                sh '''
+                if ! command -v aws &> /dev/null
+                then
+                    echo "AWS CLI not found. Installing..."
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip awscliv2.zip
+                    ./aws/install
+                fi
+                aws --version
+                '''
+            }
+        }
+    stages {
         stage('Set AWS Credentials') {
             steps {
                 withCredentials([[
